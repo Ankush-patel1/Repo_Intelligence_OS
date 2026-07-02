@@ -10,6 +10,8 @@ from app.core.exceptions.codes import RESOURCE_NOT_FOUND
 from app.db.models.repository import Repository
 from app.services.github.clone_service import CloneService
 from app.services.github.github_client import GitHubClient
+from app.services.indexing.file_scanner import FileScanner
+from app.services.indexing.repository_indexer import RepositoryIndexer
 
 
 class RepositoryService:
@@ -38,6 +40,11 @@ class RepositoryService:
             existing.last_synced = now
             await self.session.flush()
             await self.session.refresh(existing)
+            
+            # Automatically index repository after successful clone/update
+            indexer = RepositoryIndexer(self.session, FileScanner())
+            await indexer.index_repository(existing)
+            
             return existing
 
         repository_model = Repository(
@@ -53,6 +60,11 @@ class RepositoryService:
         self.session.add(repository_model)
         await self.session.flush()
         await self.session.refresh(repository_model)
+        
+        # Automatically index repository after successful clone
+        indexer = RepositoryIndexer(self.session, FileScanner())
+        await indexer.index_repository(repository_model)
+        
         return repository_model
 
     async def list_repositories(self) -> list[Repository]:
@@ -75,6 +87,11 @@ class RepositoryService:
         repository.last_synced = datetime.now(UTC)
         await self.session.flush()
         await self.session.refresh(repository)
+        
+        # Automatically index repository after successful sync
+        indexer = RepositoryIndexer(self.session, FileScanner())
+        await indexer.index_repository(repository)
+        
         return repository
 
     async def _find_by_owner_name_branch(

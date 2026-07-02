@@ -56,11 +56,26 @@ class RepositoryFileResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class LargestFile(BaseModel):
+    """Information about a large file."""
+
+    relative_path: str
+    language: str
+    size_bytes: int
+
+
 class RepositoryStatistics(BaseModel):
+    """Statistics about repository files."""
+
     total_files: int
-    total_size_bytes: int
-    total_lines: int
-    languages: dict[str, int]
-    extensions: dict[str, int]
-    binary_files: int
-    text_files: int
+    files_per_language: dict[str, int]
+    total_bytes: int
+    largest_files: list[LargestFile]
+    binary_file_count: int
+
+
+class RepositoryIndexResponse(BaseModel):
+    """Response from indexing operation."""
+
+    repository_id: uuid.UUID
+    statistics: RepositoryStatistics
