@@ -1,0 +1,8 @@
+RESOURCE_NOT_FOUND = "resource_not_found"
+VALIDATION_ERROR = "validation_error"
+UNAUTHORIZED = "unauthorized"
+FORBIDDEN = "forbidden"
+CONFLICT = "conflict"
+INTERNAL_ERROR = "internal_error"
+UPSTREAM_ERROR = "upstream_error"
+SERVICE_UNAVAILABLE = "service_unavailable"

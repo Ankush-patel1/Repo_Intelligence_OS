@@ -1,0 +1,85 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: rio
+      POSTGRES_PASSWORD: rio
+      POSTGRES_DB: rio
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rio"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      RIO_DATABASE_URL: postgresql+asyncpg://rio:rio@postgres:5432/rio
+      RIO_REDIS_URL: redis://redis:6379/0
+      RIO_CORS_ORIGINS: http://localhost:5173,http://localhost
+      RIO_LOG_LEVEL: INFO
+      RIO_SECRET_KEY: dev-secret-key
+      RIO_ENVIRONMENT: development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app/backend
+      - ./shared:/app/shared
+    develop:
+      watch:
+        - path: ./backend
+          action: sync
+          target: /app/backend
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/worker/Dockerfile
+    environment:
+      RIO_DATABASE_URL: postgresql+asyncpg://rio:rio@postgres:5432/rio
+      RIO_REDIS_URL: redis://redis:6379/0
+      RIO_LOG_LEVEL: INFO
+      RIO_SECRET_KEY: dev-secret-key
+      RIO_ENVIRONMENT: development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./workers:/app/workers
+      - ./shared:/app/shared
+      - ./backend/app:/app/backend/app
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend/Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
