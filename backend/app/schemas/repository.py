@@ -79,3 +79,12 @@ class RepositoryIndexResponse(BaseModel):
 
     repository_id: uuid.UUID
     statistics: RepositoryStatistics
+
+
+class RepositoryPipelineResponse(BaseModel):
+    """Response from pipeline operation."""
+
+    repository_id: str
+    indexing: dict | None
+    graph: dict | None
+    pipeline_complete: bool

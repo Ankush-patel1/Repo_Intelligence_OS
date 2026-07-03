@@ -50,7 +50,7 @@
 
 ## Current Version
 
-**v0.2.0**
+**v0.3.0**
 
 Last Updated: 2026-07-03
 
@@ -70,7 +70,9 @@ Last Updated: 2026-07-03
 | GitHub Repository Import | ✅ Complete |
 | Repository Synchronization | ✅ Complete |
 | Repository Indexing | ✅ Complete |
-| Tree-sitter Parsing | ⏳ Not Started |
+| Tree-sitter Parsing | ✅ Complete |
+| Symbol Extraction | ✅ Complete |
+| Symbol Persistence | ✅ Complete |
 | Repository Knowledge Graph | ⏳ Not Started |
 | Embedding Generation | ⏳ Not Started |
 | FAISS Vector Search | ⏳ Not Started |
@@ -111,6 +113,27 @@ Last Updated: 2026-07-03
 - Automatic indexing after sync
 - Repository file APIs
 
+### Tree-sitter Code Parsing
+- Multi-language parser infrastructure
+- ParserInterface architecture
+- ParserFactory for parser selection
+- ParserManager for file parsing
+- 8 language parsers implemented:
+  - Python (imports, classes, functions, methods, decorators)
+  - JavaScript (imports, exports, classes, functions, arrow functions)
+  - TypeScript (interfaces, type aliases, enums, all JS features)
+  - Java (packages, imports, classes, interfaces, enums, methods, annotations)
+  - C (includes, macros, functions, structs, enums, typedefs, globals)
+  - C++ (namespaces, classes, methods, templates, using, destructors)
+  - Go (packages, imports, structs, interfaces, functions, methods)
+  - Rust (modules, use, structs, enums, traits, impl blocks, functions)
+- Symbol extraction from AST
+- RepositorySymbol database model
+- Symbol metadata persistence
+- 22 file extensions supported
+- Automatic symbol extraction during indexing
+- 128/130 tests passing (98.5%)
+
 ---
 
 # Available API Endpoints
@@ -145,6 +168,30 @@ GET /api/v1/repositories/{id}/statistics
 
 ---
 
+# Database Models
+
+## Repository
+- id, name, description, url
+- owner, default_branch, visibility
+- stars, forks, language
+- last_synced_at, indexed_at
+- created_at, updated_at
+
+## RepositoryFile
+- id, repository_id, file_path
+- language, size_bytes, content_hash
+- is_binary, is_test, is_generated
+- line_count, created_at, updated_at
+
+## RepositorySymbol
+- id, repository_file_id, symbol_name
+- symbol_type, parent_symbol
+- start_line, end_line, start_column, end_column
+- language, signature, metadata
+- created_at
+
+---
+
 # Current Architecture
 
 GitHub Repository
@@ -163,28 +210,34 @@ Repository Indexing
 
 ↓
 
-PostgreSQL Metadata
+Tree-sitter Parsing
+
+↓
+
+Symbol Extraction
+
+↓
+
+PostgreSQL (Metadata + Symbols)
 
 ---
 
 # Next Milestone
 
-## v0.3.0
+## v0.4.0
 
-### Tree-sitter Code Parsing
+### Repository Knowledge Graph
 
 Planned Features
 
-- Parse source code into ASTs
-- Extract functions
-- Extract classes
-- Extract methods
-- Extract imports
-- Extract exports
-- Extract inheritance
-- Extract interfaces
-- Multi-language parsing
-- Store parsed symbols in PostgreSQL
+- Build code relationship graph
+- Function call analysis
+- Import/dependency tracking
+- Class inheritance hierarchies
+- Cross-file references
+- Symbol relationships
+- Graph traversal APIs
+- Dependency visualization
 
 Status:
 
@@ -204,7 +257,7 @@ Repository Indexing
 ██████████ 100%
 
 Tree-sitter Parsing
-□□□□□□□□□□ 0%
+██████████ 100%
 
 Knowledge Graph
 □□□□□□□□□□ 0%
@@ -225,4 +278,4 @@ Frontend
 ██□□□□□□□□ 20%
 
 Overall Project
-███□□□□□□□ ~30%
+████□□□□□□ ~40%
