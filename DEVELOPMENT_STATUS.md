@@ -42,3 +42,187 @@
 
 - Docker is not installed on this machine. PostgreSQL and Redis services cannot be started locally without Docker. Use `docker compose up` on a Docker-capable machine.
 - No frontend test files exist yet; vitest runner reports 0 tests.
+
+
+
+
+# Repo Intelligence OS
+
+## Current Version
+
+**v0.2.0**
+
+Last Updated: 2026-07-03
+
+---
+
+# Project Progress
+
+| Module | Status |
+|---------|--------|
+| Project Infrastructure | ✅ Complete |
+| Docker Environment | ✅ Complete |
+| PostgreSQL Setup | ✅ Complete |
+| Redis Setup | ✅ Complete |
+| Celery Worker | ✅ Complete |
+| FastAPI Backend | ✅ Complete |
+| React Frontend Scaffold | ✅ Complete |
+| GitHub Repository Import | ✅ Complete |
+| Repository Synchronization | ✅ Complete |
+| Repository Indexing | ✅ Complete |
+| Tree-sitter Parsing | ⏳ Not Started |
+| Repository Knowledge Graph | ⏳ Not Started |
+| Embedding Generation | ⏳ Not Started |
+| FAISS Vector Search | ⏳ Not Started |
+| LangGraph Orchestration | ⏳ Not Started |
+| AI Agent Framework | ⏳ Not Started |
+| Report Generation | ⏳ Not Started |
+| Authentication | ⏳ Not Started |
+| Frontend Dashboard | ⏳ In Progress |
+| Testing & Production Hardening | ⏳ In Progress |
+
+---
+
+# Completed Features
+
+### Infrastructure
+- Docker Compose environment
+- FastAPI backend
+- React frontend
+- PostgreSQL
+- Redis
+- Celery worker
+
+### GitHub Repository Management
+- Import public GitHub repositories
+- Clone repositories locally
+- Synchronize repositories
+- Automatic branch detection
+- Metadata persistence
+
+### Repository Indexing
+- Recursive repository scanning
+- Language detection
+- SHA256 hashing
+- Binary file detection
+- File metadata persistence
+- Repository statistics
+- Automatic indexing after import
+- Automatic indexing after sync
+- Repository file APIs
+
+---
+
+# Available API Endpoints
+
+## Health
+
+GET /health
+
+---
+
+## Repository Management
+
+POST /api/v1/repositories/import
+
+GET /api/v1/repositories
+
+GET /api/v1/repositories/{id}
+
+POST /api/v1/repositories/{id}/sync
+
+---
+
+## Repository Indexing
+
+POST /api/v1/repositories/{id}/index
+
+GET /api/v1/repositories/{id}/files
+
+GET /api/v1/repositories/{id}/files/{file_id}
+
+GET /api/v1/repositories/{id}/statistics
+
+---
+
+# Current Architecture
+
+GitHub Repository
+
+↓
+
+Repository Import
+
+↓
+
+Git Clone
+
+↓
+
+Repository Indexing
+
+↓
+
+PostgreSQL Metadata
+
+---
+
+# Next Milestone
+
+## v0.3.0
+
+### Tree-sitter Code Parsing
+
+Planned Features
+
+- Parse source code into ASTs
+- Extract functions
+- Extract classes
+- Extract methods
+- Extract imports
+- Extract exports
+- Extract inheritance
+- Extract interfaces
+- Multi-language parsing
+- Store parsed symbols in PostgreSQL
+
+Status:
+
+Not Started
+
+---
+
+# Overall Progress
+
+Infrastructure
+██████████ 100%
+
+GitHub Integration
+██████████ 100%
+
+Repository Indexing
+██████████ 100%
+
+Tree-sitter Parsing
+□□□□□□□□□□ 0%
+
+Knowledge Graph
+□□□□□□□□□□ 0%
+
+Embeddings
+□□□□□□□□□□ 0%
+
+Vector Search
+□□□□□□□□□□ 0%
+
+AI Agents
+□□□□□□□□□□ 0%
+
+Reports
+□□□□□□□□□□ 0%
+
+Frontend
+██□□□□□□□□ 20%
+
+Overall Project
+███□□□□□□□ ~30%
