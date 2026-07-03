@@ -2,105 +2,25 @@
 
 from pathlib import Path
 
+from app.services.parser.c_parser import CTreeSitterParser
+from app.services.parser.cpp_parser import CppTreeSitterParser
+from app.services.parser.go_parser import GoTreeSitterParser
+from app.services.parser.java_parser import JavaTreeSitterParser
 from app.services.parser.javascript_parser import JavaScriptTreeSitterParser
 from app.services.parser.parser_interface import ParseResult, ParserInterface
 from app.services.parser.python_parser import PythonTreeSitterParser
+from app.services.parser.rust_parser import RustTreeSitterParser
 from app.services.parser.typescript_parser import TypeScriptTreeSitterParser
 
 # Aliases for backward compatibility
 PythonParser = PythonTreeSitterParser
 JavaScriptParser = JavaScriptTreeSitterParser
 TypeScriptParser = TypeScriptTreeSitterParser
-
-
-class JavaParser(ParserInterface):
-    """Parser for Java source files."""
-
-    @property
-    def language(self) -> str:
-        return "Java"
-
-    @property
-    def supported_extensions(self) -> list[str]:
-        return [".java"]
-
-    def parse(self, file_path: Path) -> ParseResult:
-        """Parse a Java file (placeholder implementation).
-
-        Args:
-            file_path: Path to Java file
-
-        Returns:
-            ParseResult with placeholder data
-        """
-        return ParseResult(
-            file_path=str(file_path),
-            language=self.language,
-            success=True,
-            error_message=None,
-            parse_tree={"type": "compilation_unit", "placeholder": True},
-            symbols=[],
-        )
-
-
-class GoParser(ParserInterface):
-    """Parser for Go source files."""
-
-    @property
-    def language(self) -> str:
-        return "Go"
-
-    @property
-    def supported_extensions(self) -> list[str]:
-        return [".go"]
-
-    def parse(self, file_path: Path) -> ParseResult:
-        """Parse a Go file (placeholder implementation).
-
-        Args:
-            file_path: Path to Go file
-
-        Returns:
-            ParseResult with placeholder data
-        """
-        return ParseResult(
-            file_path=str(file_path),
-            language=self.language,
-            success=True,
-            error_message=None,
-            parse_tree={"type": "source_file", "placeholder": True},
-            symbols=[],
-        )
-
-
-class RustParser(ParserInterface):
-    """Parser for Rust source files."""
-
-    @property
-    def language(self) -> str:
-        return "Rust"
-
-    @property
-    def supported_extensions(self) -> list[str]:
-        return [".rs"]
-
-    def parse(self, file_path: Path) -> ParseResult:
-        """Parse a Rust file (placeholder implementation).
-
-        Args:
-            file_path: Path to Rust file
-
-        Returns:
-            ParseResult with placeholder data
-        """
-        return ParseResult(
-            file_path=str(file_path),
-            language=self.language,
-            success=True,
-            error_message=None,
-            parse_tree={"type": "source_file", "placeholder": True},
-            symbols=[],
-        )
+JavaParser = JavaTreeSitterParser
+CParser = CTreeSitterParser
+CppParser = CppTreeSitterParser
+GoParser = GoTreeSitterParser
+RustParser = RustTreeSitterParser
 
 
 class GenericParser(ParserInterface):
@@ -150,6 +70,8 @@ class ParserFactory:
             "JavaScript": JavaScriptParser(),
             "TypeScript": TypeScriptParser(),
             "Java": JavaParser(),
+            "C": CParser(),
+            "C++": CppParser(),
             "Go": GoParser(),
             "Rust": RustParser(),
         }

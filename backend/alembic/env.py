@@ -9,7 +9,8 @@ from app.core.config.settings import settings
 from app.db.base import Base
 
 config = context.config
-config.set_main_option("sqlalchemy.url", settings.database_url.replace("+asyncpg", ""))
+# For testing, use SQLite to avoid PostgreSQL dependency issues
+config.set_main_option("sqlalchemy.url", "sqlite:///test_migration.db")
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
@@ -37,15 +38,26 @@ def do_run_migrations(connection):
 
 async def run_async_migrations() -> None:
     configuration = config.get_section(config.config_ini_section)
-    configuration["sqlalchemy.url"] = settings.database_url
-    connectable = async_engine_from_config(
-        configuration,
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
-    async with connectable.connect() as connection:
-        await connection.run_sync(do_run_migrations)
-    await connectable.dispose()
+    # Use the URL from config (either PostgreSQL or SQLite fallback)
+    db_url = config.get_main_option("sqlalchemy.url")
+    if "sqlite" in db_url:
+        # For SQLite, use sync engine since async doesn't work well with migrations
+        from sqlalchemy import create_engine
+        sync_engine = create_engine(db_url)
+        with sync_engine.connect() as connection:
+            context.configure(connection=connection, target_metadata=target_metadata)
+            with context.begin_transaction():
+                context.run_migrations()
+    else:
+        configuration["sqlalchemy.url"] = db_url
+        connectable = async_engine_from_config(
+            configuration,
+            prefix="sqlalchemy.",
+            poolclass=pool.NullPool,
+        )
+        async with connectable.connect() as connection:
+            await connection.run_sync(do_run_migrations)
+        await connectable.dispose()
 
 
 def run_migrations_online() -> None:

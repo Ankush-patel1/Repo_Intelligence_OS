@@ -3,7 +3,7 @@ from datetime import datetime
 
 from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Index, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 
@@ -41,4 +41,12 @@ class RepositoryFile(Base):
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
+    )
+
+    # Relationships
+    symbols: Mapped[list["RepositorySymbol"]] = relationship(
+        "RepositorySymbol",
+        back_populates="repository_file",
+        cascade="all, delete-orphan",
+        lazy="selectin",
     )

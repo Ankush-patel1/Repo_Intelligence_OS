@@ -1,8 +1,7 @@
 import uuid
 from collections import Counter
-from pathlib import Path
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions.base import AppError
@@ -10,24 +9,44 @@ from app.core.exceptions.codes import RESOURCE_NOT_FOUND
 from app.db.models.repository import Repository
 from app.db.models.repository_file import RepositoryFile
 from app.services.indexing.file_scanner import FileScanner, ScannedFile
+from app.services.indexing.symbol_extractor import SymbolExtractor
 
 LARGEST_FILE_LIMIT = 5
 
 
 class RepositoryIndexer:
-    def __init__(self, session: AsyncSession, file_scanner: FileScanner | None = None) -> None:
+    def __init__(
+        self,
+        session: AsyncSession,
+        file_scanner: FileScanner | None = None,
+        symbol_extractor: SymbolExtractor | None = None,
+    ) -> None:
         self.session = session
         self.file_scanner = file_scanner or FileScanner()
+        self.symbol_extractor = symbol_extractor or SymbolExtractor(session)
 
     async def index_repository(self, repository: Repository) -> dict:
+        # Scan files
         scanned_files = self.file_scanner.scan(repository.clone_path)
+
+        # Delete existing files and symbols (cascade delete handles symbols)
         await self.session.execute(
             delete(RepositoryFile).where(RepositoryFile.repository_id == repository.id)
         )
+
+        # Create file models
         models = [self._to_model(repository.id, scanned_file) for scanned_file in scanned_files]
         self.session.add_all(models)
         await self.session.flush()
-        return self.build_statistics(scanned_files)
+
+        # Extract symbols from each file
+        symbol_stats = await self._extract_symbols_from_files(models)
+
+        # Build and return statistics
+        stats = self.build_statistics(scanned_files)
+        stats["symbols"] = symbol_stats
+
+        return stats
 
     async def index_repository_by_id(self, repository_id: uuid.UUID) -> dict:
         repository = await self._get_repository(repository_id)
@@ -131,3 +150,45 @@ class RepositoryIndexer:
             last_modified=scanned_file.last_modified,
             is_binary=scanned_file.is_binary,
         )
+
+    async def _extract_symbols_from_files(
+        self, repository_files: list[RepositoryFile]
+    ) -> dict:
+        """Extract symbols from all repository files.
+
+        Args:
+            repository_files: List of RepositoryFile models to parse
+
+        Returns:
+            Dictionary with symbol extraction statistics
+        """
+        total_symbols = 0
+        files_parsed = 0
+        files_skipped = 0
+        parse_errors = 0
+        symbols_by_language = {}
+
+        for repo_file in repository_files:
+            result = await self.symbol_extractor.extract_and_store_symbols(repo_file)
+
+            if result["success"]:
+                files_parsed += 1
+                total_symbols += result["symbols_extracted"]
+
+                # Track symbols by language
+                language = result["language"]
+                if language not in symbols_by_language:
+                    symbols_by_language[language] = 0
+                symbols_by_language[language] += result["symbols_extracted"]
+            elif result["reason"] == "parse_error":
+                parse_errors += 1
+            else:
+                files_skipped += 1
+
+        return {
+            "total_symbols": total_symbols,
+            "files_parsed": files_parsed,
+            "files_skipped": files_skipped,
+            "parse_errors": parse_errors,
+            "symbols_by_language": symbols_by_language,
+        }
