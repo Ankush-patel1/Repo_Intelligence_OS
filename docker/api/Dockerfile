@@ -2,6 +2,13 @@ FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
+# Install build dependencies for tree-sitter compilation
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    make \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY backend/requirements/ requirements/
 RUN pip install --no-cache-dir -r requirements/prod.txt
 

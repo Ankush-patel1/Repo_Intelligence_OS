@@ -1,0 +1,179 @@
+{
+  "imports": {
+    "passed": 11,
+    "failed": 0,
+    "details": [
+      {
+        "test": "Stage 1 - Repository Model",
+        "status": "passed"
+      },
+      {
+        "test": "Stage 2 - Indexing",
+        "status": "passed"
+      },
+      {
+        "test": "Stage 2 - File Model",
+        "status": "passed"
+      },
+      {
+        "test": "Stage 3 - Symbol Model",
+        "status": "passed"
+      },
+      {
+        "test": "Stage 4 - Graph Services",
+        "status": "passed"
+      },
+      {
+        "test": "Stage 4 - Graph Models",
+        "status": "passed"
+      },
+      {
+        "test": "Stage 5 - Chunking Services",
+        "status": "passed"
+      },
+      {
+        "test": "Stage 5 - Chunk Model",
+        "status": "passed"
+      },
+      {
+        "test": "Stage 5 - Chunk Schemas",
+        "status": "passed"
+      },
+      {
+        "test": "Pipeline Orchestrator",
+        "status": "passed"
+      },
+      {
+        "test": "API Endpoints",
+        "status": "passed"
+      }
+    ]
+  },
+  "database_models": {
+    "passed": 2,
+    "failed": 4,
+    "details": [
+      {
+        "model": "Repository",
+        "status": "failed",
+        "error": "Missing field: local_path"
+      },
+      {
+        "model": "RepositoryFile",
+        "status": "passed",
+        "table": "repository_files"
+      },
+      {
+        "model": "RepositorySymbol",
+        "status": "failed",
+        "error": "Missing field: repository_id"
+      },
+      {
+        "model": "RepositoryNode",
+        "status": "failed",
+        "error": "Missing field: node_name"
+      },
+      {
+        "model": "RepositoryEdge",
+        "status": "failed",
+        "error": "Missing field: repository_id"
+      },
+      {
+        "model": "RepositoryChunk",
+        "status": "passed",
+        "table": "repository_chunks"
+      }
+    ]
+  },
+  "chunk_schemas": {
+    "passed": 4,
+    "failed": 0,
+    "details": [
+      {
+        "schema": "ChunkResult",
+        "status": "passed"
+      },
+      {
+        "schema": "ChunkMetadata",
+        "status": "passed"
+      },
+      {
+        "schema": "ChunkContext",
+        "status": "passed"
+      },
+      {
+        "schema": "ChunkRelationship",
+        "status": "passed"
+      }
+    ]
+  },
+  "chunking_services": {
+    "passed": 3,
+    "failed": 0,
+    "details": [
+      {
+        "service": "ClassChunker",
+        "status": "passed",
+        "methods": [
+          "chunk_class",
+          "chunk_all_classes"
+        ]
+      },
+      {
+        "service": "FunctionChunker",
+        "status": "passed",
+        "methods": [
+          "chunk_function",
+          "chunk_all_functions",
+          "chunk_file_functions"
+        ]
+      },
+      {
+        "service": "ChunkPersister",
+        "status": "passed",
+        "methods": [
+          "persist_chunk",
+          "persist_chunks",
+          "update_repository_chunks",
+          "get_chunk_statistics"
+        ]
+      }
+    ]
+  },
+  "pipeline_orchestrator": {
+    "passed": 13,
+    "failed": 0,
+    "details": []
+  },
+  "api_endpoints": {
+    "passed": 8,
+    "failed": 0,
+    "details": [
+      {
+        "router": "repositories",
+        "status": "passed",
+        "routes": 11
+      },
+      {
+        "router": "graph",
+        "status": "passed",
+        "routes": 5
+      },
+      {
+        "router": "chunks",
+        "status": "passed",
+        "routes": 5
+      }
+    ]
+  },
+  "response_schemas": {
+    "passed": 5,
+    "failed": 0,
+    "details": []
+  },
+  "data_flow_logic": {
+    "passed": 7,
+    "failed": 0,
+    "details": []
+  }
+}

@@ -146,13 +146,14 @@ async def analyze_repository(
     pipeline: RepositoryPipeline = PipelineServiceDep,
     session: AsyncSession = DbSessionDep,
 ) -> RepositoryPipelineResponse:
-    """Run complete analysis pipeline: Index → Parse → Build Graph.
+    """Run complete analysis pipeline: Index → Parse → Build Graph → Generate Chunks.
 
     This is the recommended endpoint for full repository analysis.
     Performs all steps in sequence:
     1. Index repository (scan files)
     2. Parse symbols (extract code symbols)
     3. Build knowledge graph (create nodes and edges)
+    4. Generate semantic chunks (create code chunks for RAG/LLM)
 
     Args:
         repository_id: UUID of the repository

@@ -87,4 +87,5 @@ class RepositoryPipelineResponse(BaseModel):
     repository_id: str
     indexing: dict | None
     graph: dict | None
+    chunking: dict | None = None
     pipeline_complete: bool

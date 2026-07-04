@@ -6,6 +6,7 @@ Coordinates the complete repository analysis pipeline:
 3. Index (scan files)
 4. Parse (extract symbols)
 5. Build Knowledge Graph (create nodes and edges)
+6. Generate Semantic Chunks (create semantic code chunks)
 """
 
 from typing import Any
@@ -13,6 +14,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.services.chunking import ClassChunker, ChunkPersister, FunctionChunker
 from app.services.graph import EdgeExtractor, GraphPersister, NodeExtractor
 from app.services.indexing import FileScanner, RepositoryIndexer
 
@@ -34,23 +36,29 @@ class RepositoryPipeline:
         self.node_extractor = NodeExtractor(session=session)
         self.edge_extractor = EdgeExtractor(session=session)
         self.graph_persister = GraphPersister(session=session)
+        self.class_chunker = ClassChunker(session=session)
+        self.function_chunker = FunctionChunker(session=session)
+        self.chunk_persister = ChunkPersister(session=session)
 
     async def run_full_pipeline(
         self,
         repository_id: UUID,
         skip_indexing: bool = False,
         skip_graph: bool = False,
+        skip_chunking: bool = False,
     ) -> dict[str, Any]:
         """Run the complete pipeline for a repository.
 
         Pipeline steps:
         1. Index repository (scan files and extract symbols)
         2. Build knowledge graph (create nodes and edges)
+        3. Generate semantic chunks (create code chunks)
 
         Args:
             repository_id: UUID of the repository
             skip_indexing: Skip indexing step (use existing data)
             skip_graph: Skip graph building step
+            skip_chunking: Skip semantic chunking step
 
         Returns:
             Dictionary with statistics from all pipeline stages:
@@ -58,6 +66,7 @@ class RepositoryPipeline:
                 "repository_id": str,
                 "indexing": {...},
                 "graph": {...},
+                "chunking": {...},
                 "pipeline_complete": bool
             }
         """
@@ -65,6 +74,7 @@ class RepositoryPipeline:
             "repository_id": str(repository_id),
             "indexing": None,
             "graph": None,
+            "chunking": None,
             "pipeline_complete": False,
         }
 
@@ -84,15 +94,24 @@ class RepositoryPipeline:
         else:
             results["graph"] = {"skipped": True}
 
+        # Step 3: Generate semantic chunks (if not skipped)
+        if not skip_chunking:
+            chunking_stats = await self.generate_chunks(repository_id)
+            results["chunking"] = chunking_stats
+            await self.session.flush()
+        else:
+            results["chunking"] = {"skipped": True}
+
         # Mark pipeline as complete
         results["pipeline_complete"] = True
 
         return results
 
     async def run_index_and_graph(self, repository_id: UUID) -> dict[str, Any]:
-        """Run indexing and graph building (most common workflow).
+        """Run indexing and graph building (legacy workflow without chunking).
 
-        Convenience method that runs the full pipeline without skipping any steps.
+        Convenience method that runs indexing and graph building only.
+        Use run_full_pipeline for complete analysis including chunking.
 
         Args:
             repository_id: UUID of the repository
@@ -104,6 +123,7 @@ class RepositoryPipeline:
             repository_id,
             skip_indexing=False,
             skip_graph=False,
+            skip_chunking=True,
         )
 
     async def run_graph_only(self, repository_id: UUID) -> dict[str, Any]:
@@ -119,6 +139,7 @@ class RepositoryPipeline:
             repository_id,
             skip_indexing=True,
             skip_graph=False,
+            skip_chunking=True,
         )
 
     async def build_graph(self, repository_id: UUID) -> dict[str, Any]:
@@ -196,8 +217,10 @@ class RepositoryPipeline:
                 "repository_id": str,
                 "indexed": bool,
                 "graph_built": bool,
+                "chunks_generated": bool,
                 "indexing_stats": {...},
-                "graph_stats": {...}
+                "graph_stats": {...},
+                "chunking_stats": {...}
             }
         """
         # Check if indexed (has files)
@@ -210,10 +233,101 @@ class RepositoryPipeline:
         if graph_exists:
             graph_stats = await self.graph_persister.get_graph_statistics(repository_id)
 
+        # Check if chunks exist
+        chunking_stats = await self.chunk_persister.get_chunk_statistics(repository_id)
+        chunks_generated = chunking_stats["total_chunks"] > 0
+
         return {
             "repository_id": str(repository_id),
             "indexed": indexed,
             "graph_built": graph_exists,
+            "chunks_generated": chunks_generated,
             "indexing_stats": indexing_stats,
             "graph_stats": graph_stats,
+            "chunking_stats": chunking_stats,
         }
+
+    async def generate_chunks(
+        self,
+        repository_id: UUID,
+        include_classes: bool = True,
+        include_functions: bool = True,
+        include_methods: bool = True,
+    ) -> dict[str, Any]:
+        """Generate semantic chunks for a repository.
+
+        Creates semantic code chunks from parsed symbols and graph data.
+        Uses ClassChunker and FunctionChunker to generate chunks, then
+        persists them with deduplication.
+
+        Args:
+            repository_id: UUID of the repository
+            include_classes: Whether to chunk classes (default: True)
+            include_functions: Whether to chunk functions (default: True)
+            include_methods: Whether to chunk methods (default: True)
+
+        Returns:
+            Dictionary with chunking statistics:
+            {
+                "total_chunks": int,
+                "created": int,
+                "updated": int,
+                "deleted": int,
+                "unchanged": int,
+                "by_type": {...}
+            }
+        """
+        all_chunks = []
+
+        # Generate class chunks
+        if include_classes:
+            try:
+                class_chunks = await self.class_chunker.chunk_all_classes(repository_id)
+                all_chunks.extend(class_chunks)
+            except Exception as e:
+                # Log but continue with other chunk types
+                print(f"Error generating class chunks: {e}")
+
+        # Generate function/method chunks
+        if include_functions or include_methods:
+            try:
+                function_chunks = await self.function_chunker.chunk_all_functions(
+                    repository_id, include_methods=include_methods
+                )
+                all_chunks.extend(function_chunks)
+            except Exception as e:
+                # Log but continue
+                print(f"Error generating function chunks: {e}")
+
+        # Persist chunks with update strategy (handles create/update/delete)
+        stats = await self.chunk_persister.update_repository_chunks(
+            repository_id, all_chunks
+        )
+
+        # Get chunk type breakdown
+        chunking_stats = await self.chunk_persister.get_chunk_statistics(repository_id)
+
+        return {
+            "total_chunks": chunking_stats["total_chunks"],
+            "created": stats["created"],
+            "updated": stats["updated"],
+            "deleted": stats["deleted"],
+            "unchanged": stats["unchanged"],
+            "by_type": chunking_stats.get("by_type", {}),
+        }
+
+    async def regenerate_chunks(self, repository_id: UUID) -> dict[str, Any]:
+        """Regenerate chunks without re-running other pipeline stages.
+
+        Useful when:
+        - Chunking logic has been updated
+        - Chunks need to be regenerated from existing graph data
+        - You want to rebuild chunks without re-parsing
+
+        Args:
+            repository_id: UUID of the repository
+
+        Returns:
+            Dictionary with chunking statistics
+        """
+        return await self.generate_chunks(repository_id)

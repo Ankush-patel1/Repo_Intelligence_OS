@@ -1,0 +1,30 @@
+{
+  "stage_1_import": {
+    "status": "failed",
+    "details": {
+      "error": "[WinError 1225] The remote computer refused the network connection"
+    }
+  },
+  "stage_2_index": {
+    "status": "pending",
+    "details": {}
+  },
+  "stage_3_parse": {
+    "status": "pending",
+    "details": {}
+  },
+  "stage_4_graph": {
+    "status": "pending",
+    "details": {}
+  },
+  "stage_5_chunking": {
+    "status": "pending",
+    "details": {}
+  },
+  "verification_tests": {
+    "semantic_chunks_created": false,
+    "graph_context_included": false,
+    "apis_working": false,
+    "data_flow_correct": false
+  }
+}

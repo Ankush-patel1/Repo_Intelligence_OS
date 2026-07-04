@@ -29,6 +29,16 @@ from app.schemas.parser import (
     ParsedFileResponse,
 )
 
+# Chunk schemas
+from app.schemas.chunk import (
+    ChunkContext,
+    ChunkMetadata,
+    ChunkResult,
+    ChunkRelationship,
+    ChunkMetadataDict,
+    ChunkContextDict,
+)
+
 __all__ = [
     # Repository schemas
     "RepositoryImportRequest",
@@ -53,4 +63,11 @@ __all__ = [
     "ParsedFileCreate",
     "ParsedFileUpdate",
     "ParsedFileResponse",
+    # Chunk schemas
+    "ChunkContext",
+    "ChunkMetadata",
+    "ChunkResult",
+    "ChunkRelationship",
+    "ChunkMetadataDict",
+    "ChunkContextDict",
 ]
